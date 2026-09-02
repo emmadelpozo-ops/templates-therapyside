@@ -82,7 +82,13 @@ tr:hover td{background:#f8f8f4}
 
 <div class="container">
   <table>
-    <thead><tr><th>Tipo</th><th>Idioma</th><th>Nombre</th><th>Vista previa</th><th>Categoría</th></tr></thead>
+    <thead><tr>
+      <th onclick="sortBy('tipo')" style="cursor:pointer;user-select:none">Tipo <span id="sort-tipo"></span></th>
+      <th onclick="sortBy('idioma')" style="cursor:pointer;user-select:none">Idioma <span id="sort-idioma"></span></th>
+      <th onclick="sortBy('nombre')" style="cursor:pointer;user-select:none">Nombre <span id="sort-nombre"></span></th>
+      <th>Vista previa</th>
+      <th onclick="sortBy('categoria')" style="cursor:pointer;user-select:none">Categoría <span id="sort-categoria"></span></th>
+    </tr></thead>
     <tbody id="tbody"></tbody>
   </table>
   <div class="no-results" id="no-results" style="display:none">Sin resultados para esta búsqueda.</div>
@@ -179,6 +185,25 @@ function render(list) {
   }).join('');
 }
 
+var sortCol = null;
+var sortDir = 1; // 1 asc, -1 desc
+
+function sortBy(col) {
+  if (sortCol === col) {
+    sortDir *= -1;
+  } else {
+    sortCol = col;
+    sortDir = 1;
+  }
+  ['tipo','idioma','nombre','categoria'].forEach(function(c) {
+    var el = document.getElementById('sort-' + c);
+    if (el) el.textContent = '';
+  });
+  var el = document.getElementById('sort-' + col);
+  if (el) el.textContent = sortDir === 1 ? ' ↑' : ' ↓';
+  applyFilters();
+}
+
 function applyFilters() {
   var q = document.getElementById('search').value.trim().toLowerCase();
   var fi = document.getElementById('f-idioma').value;
@@ -191,6 +216,13 @@ function applyFilters() {
     if (q) return t.nombre.toLowerCase().includes(q) || t.texto.toLowerCase().includes(q) || (t.asunto && t.asunto.toLowerCase().includes(q));
     return true;
   });
+  if (sortCol) {
+    res.sort(function(a, b) {
+      var va = (a[sortCol] || '').toLowerCase();
+      var vb = (b[sortCol] || '').toLowerCase();
+      return va < vb ? -sortDir : va > vb ? sortDir : 0;
+    });
+  }
   render(res);
 }
 
